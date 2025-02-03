@@ -86,7 +86,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-    origin: 'https://olgakruglik.github.io/react-course-project',
+    origin: 'https://course-project-pw4c31n0i-olgakrugliks-projects.vercel.app/',
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
