@@ -11,9 +11,14 @@ const PORT = process.env.PORT || 3000;
 
 
 app.use(cors({
-    origin: 'https://course-project-pearl-seven.vercel.app/',
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    origin: [
+        'https://course-project-cmi5ck1cp-olgakrugliks-projects.vercel.app',
+        'https://olgakruglik.github.io',
+        'https://userslist-phi.vercel.app'
+      ],
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
 }));
 
 // Middleware
@@ -55,7 +60,7 @@ app.post('/register', async (req, res) => {
 });
 
 app.get('/users', async (req, res) => {
-    const sql = 'SELECT id, username, email, null AS password, is_locked FROM users'; // скрываем пароли
+    const sql = 'SELECT id, username, email, password, is_locked FROM users'; // скрываем пароли
     try {
         console.log('SQL запрос:', sql); // Логирование SQL запроса
         const [results] = await db.query(sql);
@@ -67,10 +72,12 @@ app.get('/users', async (req, res) => {
     }
 });
 
+app.options('*', cors());
 
 
 
-// Запуск сервера
-app.listen(PORT, () => {
-    console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
-});
+app.use((req, res) => {
+    res.status(404).json({ error: 'Маршрут не найден' });
+  });
+
+module.exports = app;
