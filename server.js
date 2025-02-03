@@ -8,11 +8,15 @@ const cors = require('cors');
 dotenv.config();
 
 const app = express();
+        
+        
 const router = express.Router();
 app.use('/api', router);
 
 app.use(cors({
     origin: [
+        'http://localhost:3000/api/users',
+        'https://course-project-pearl-seven.vercel.app',
         'https://course-project-cmi5ck1cp-olgakrugliks-projects.vercel.app',
         'https://olgakruglik.github.io',
         'https://userslist-phi.vercel.app'
@@ -35,7 +39,12 @@ const db = mysql.createPool({
     port: process.env.DB_PORT || 3306,
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : null,
 });
-
+db.getConnection()
+    .then(() => console.log('✅ Подключение к базе данных установлено'))
+    .catch(err => {
+        console.error('❌ Ошибка подключения к БД:', err);
+        process.exit(1); // Завершает процесс, если БД недоступна
+    });
 // Регистрация пользователя
 app.post('/register', async (req, res) => {
     try {
@@ -76,8 +85,9 @@ router.get('/users', async (req, res) => {
 app.options('*', cors());
 
 // Обработчик 404
-app.use((req, res) => {
-    res.status(404).json({ error: 'Маршрут не найден' });
+app.use((err, req, res, next) => {
+    console.error('Ошибка:', err);
+    res.status(500).json({ error: 'Ошибка сервера', details: err.message });
 });
 
 module.exports = app;
