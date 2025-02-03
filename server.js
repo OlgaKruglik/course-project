@@ -1,28 +1,30 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
-const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
+const dotenv = require('dotenv');
+const helmet = require('helmet');
 const cors = require('cors');
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
+const router = express.Router();
+app.use('/api', router);
 
 app.use(cors({
     origin: [
         'https://course-project-cmi5ck1cp-olgakrugliks-projects.vercel.app',
         'https://olgakruglik.github.io',
         'https://userslist-phi.vercel.app'
-      ],
-      methods: ['GET', 'POST', 'PUT', 'DELETE'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-      credentials: true,
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
 }));
 
 // Middleware
-app.use(express.json()); // Позволяет работать с JSON
+app.use(express.json());
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // Подключение к базе данных
 const db = mysql.createPool({
@@ -34,7 +36,7 @@ const db = mysql.createPool({
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : null,
 });
 
-// Регистрация пользователя (внесение данных в БД)
+// Регистрация пользователя
 app.post('/register', async (req, res) => {
     try {
         const { username, email, password } = req.body;
@@ -59,25 +61,25 @@ app.post('/register', async (req, res) => {
     }
 });
 
-app.get('/users', async (req, res) => {
-    const sql = 'SELECT id, username, email, password, is_locked FROM users'; // скрываем пароли
+// Получение списка пользователей
+router.get('/users', async (req, res) => {
+    const sql = 'SELECT id, username, email, created_at, is_locked, is_deleted FROM users';
     try {
-        console.log('SQL запрос:', sql); // Логирование SQL запроса
         const [results] = await db.query(sql);
-        console.log('Полученные пользователи:', results); // Логирование результатов
         res.json(results);
     } catch (err) {
         console.error('Ошибка при получении пользователей:', err);
-        res.status(500).json({ error: 'Ошибка при получении пользователей' });
+        res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
 
 app.options('*', cors());
 
-
-
+// Обработчик 404
 app.use((req, res) => {
     res.status(404).json({ error: 'Маршрут не найден' });
-  });
+});
 
 module.exports = app;
+module.exports.handler = app;
+
