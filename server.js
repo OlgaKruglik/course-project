@@ -46,41 +46,41 @@ db.getConnection()
         process.exit(1); // Завершает процесс, если БД недоступна
     });
 // Регистрация пользователя
-app.post('/register', async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
+// app.post('/register', async (req, res) => {
+//     try {
+//         const { username, email, password } = req.body;
 
-        if (!username || !email || !password) {
-            return res.status(400).json({ error: 'Все поля обязательны' });
-        }
+//         if (!username || !email || !password) {
+//             return res.status(400).json({ error: 'Все поля обязательны' });
+//         }
 
-        // Хэшируем пароль
-        const hashedPassword = await bcrypt.hash(password, 10);
+//         // Хэшируем пароль
+//         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Вставляем пользователя в базу
-        const [result] = await db.execute(
-            `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`,
-            [username, email, hashedPassword]
-        );
+//         // Вставляем пользователя в базу
+//         const [result] = await db.execute(
+//             `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`,
+//             [username, email, hashedPassword]
+//         );
 
-        res.status(201).json({ message: 'Пользователь создан!', userId: result.insertId });
-    } catch (error) {
-        console.error('Ошибка регистрации:', error);
-        res.status(500).json({ error: 'Ошибка сервера' });
-    }
-});
+//         res.status(201).json({ message: 'Пользователь создан!', userId: result.insertId });
+//     } catch (error) {
+//         console.error('Ошибка регистрации:', error);
+//         res.status(500).json({ error: 'Ошибка сервера' });
+//     }
+// });
 
-// Получение списка пользователей
-router.get('/users', async (req, res) => {
-    const sql = 'SELECT id, username, email, created_at, is_locked, is_deleted FROM users';
-    try {
-        const [results] = await db.query(sql);
-        res.json(results);
-    } catch (err) {
-        console.error('Ошибка при получении пользователей:', err);
-        res.status(500).json({ error: 'Ошибка сервера' });
-    }
-});
+// // Получение списка пользователей
+// router.get('/users', async (req, res) => {
+//     const sql = 'SELECT id, username, email, created_at, is_locked, is_deleted FROM users';
+//     try {
+//         const [results] = await db.query(sql);
+//         res.json(results);
+//     } catch (err) {
+//         console.error('Ошибка при получении пользователей:', err);
+//         res.status(500).json({ error: 'Ошибка сервера' });
+//     }
+// });
 
 app.options('*', cors());
 
