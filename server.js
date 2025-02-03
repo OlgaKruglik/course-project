@@ -2,11 +2,20 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
+const cors = require('cors');
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const cors = require('cors');
+
+app.use(cors({
+    origin: 'https://olgakruglik.github.io/react-course-project',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Middleware
 app.use(express.json()); // Позволяет работать с JSON
