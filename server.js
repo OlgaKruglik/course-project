@@ -9,7 +9,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const cors = require('cors');
 
 app.use(cors({
     origin: 'https://olgakruglik.github.io/react-course-project',
