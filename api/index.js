@@ -19,7 +19,8 @@ app.use(cors({
         'https://course-project-pearl-seven.vercel.app',
         'https://course-project-cmi5ck1cp-olgakrugliks-projects.vercel.app',
         'https://olgakruglik.github.io',
-        'https://userslist-phi.vercel.app'
+        'https://userslist-phi.vercel.app',
+        'https://olgakruglik.github.io/react-course-project/'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
