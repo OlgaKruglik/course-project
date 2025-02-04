@@ -11,33 +11,14 @@ const app = express();
 const router = express.Router();
 app.use("/api", router);
 
-// 🔹 CORS: Разрешенные домены
-// const allowedOrigins = [
-//   "http://localhost:3000",
-//   "https://course-project-pearl-seven.vercel.app",
-//   "https://course-project-cmi5ck1cp-olgakrugliks-projects.vercel.app",
-//   "https://userslist-phi.vercel.app",
-//   "https://olgakruglik.github.io",
-//   "https://olgakruglik.github.io/react-course-project/",
-// ];
+const corsOptions = {
+  origin: "https://olgakruglik.github.io",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
 
-// 🔹 Настройка CORS
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
-
-// app.use((req, res, next) => {
-//   res.setHeader("Access-Control-Allow-Origin", "*");
-//   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-//   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//   res.setHeader("Access-Control-Allow-Credentials", "true");
-//   next();
-// });
+app.use(cors(corsOptions));
 
 // 🔹 Middleware
 app.use(express.json());
@@ -86,8 +67,6 @@ router.get("/users", async (req, res) => {
   try {
     const [results] = await db.query(sql);
 
-    res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
     res.json(results);
   } catch (err) {
     console.error("Ошибка при получении пользователей:", err);
@@ -102,6 +81,6 @@ app.use((err, req, res, next) => {
 });
 
 // 🔹 Разрешение preflight-запросов (OPTIONS)
-app.options("*", cors());
+app.options("*", cors(corsOptions));
 
 module.exports = app;
