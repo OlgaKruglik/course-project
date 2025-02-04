@@ -1,6 +1,8 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
+const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
 const dotenv = require('dotenv');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -19,25 +21,21 @@ app.use(cors({
         'https://course-project-cmi5ck1cp-olgakrugliks-projects.vercel.app',
         'https://userslist-phi.vercel.app',
         'https://olgakruglik.github.io',
-        'https://olgakruglik.github.io/react-course-project/'
+        'https://olgakruglik.github.io/react-course-project/',
+        'https://course-project-pearl-seven.vercel.app/api/users'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
 }));
 
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-}));
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    next();
+  });
 
 // Middleware
 app.use(express.json());
@@ -50,7 +48,7 @@ const db = mysql.createPool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT || 3306,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : null,
+    ssl: process.env.DB_SSL  === 'true' ? { ca: process.env.DB_CA_CERT } : null,
 });
 
 
