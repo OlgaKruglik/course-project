@@ -97,6 +97,10 @@ app.use((err, req, res, next) => {
     console.error('Ошибка:', err);
     res.status(500).json({ error: 'Ошибка сервера', details: err.message });
 });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Сервер запущен на порту ${PORT}`);
+});
 
 module.exports = app;
 
