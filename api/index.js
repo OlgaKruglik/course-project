@@ -8,17 +8,15 @@ const cors = require('cors');
 dotenv.config();
 
 const app = express();
-        
-        
 const router = express.Router();
 app.use('/api', router);
 
+// Настройка CORS
 app.use(cors({
     origin: [
-        'http://localhost:3000/api/users',
+        'http://localhost:3000',
         'https://course-project-pearl-seven.vercel.app',
         'https://course-project-cmi5ck1cp-olgakrugliks-projects.vercel.app',
-        'https://olgakruglik.github.io',
         'https://userslist-phi.vercel.app',
         'https://olgakruglik.github.io/react-course-project/'
     ],
@@ -48,14 +46,11 @@ const db = mysql.createPool({
     port: process.env.DB_PORT || 3306,
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : null,
 });
-db.getConnection()
-    .then(() => console.log('✅ Подключение к базе данных установлено'))
-    .catch(err => {
-        console.error('❌ Ошибка подключения к БД:', err);
-        process.exit(1); // Завершает процесс, если БД недоступна
-    });
 
-app.post('/register', async (req, res) => {
+
+
+// Регистрация пользователя
+router.post('/register', async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
@@ -63,10 +58,7 @@ app.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Все поля обязательны' });
         }
 
-        // Хэшируем пароль
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Вставляем пользователя в базу
         const [result] = await db.execute(
             `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`,
             [username, email, hashedPassword]
@@ -91,18 +83,13 @@ router.get('/users', async (req, res) => {
     }
 });
 
-app.options('*', cors());
-
-// Обработчик 404
+// Обработчик ошибок
 app.use((err, req, res, next) => {
     console.error('Ошибка:', err);
     res.status(500).json({ error: 'Ошибка сервера', details: err.message });
 });
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Сервер запущен на порту ${PORT}`);
-});
+
+app.options('*', cors());
+
 
 module.exports = app;
-
-
