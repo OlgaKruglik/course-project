@@ -1,40 +1,29 @@
 const express = require("express");
-const mysql = require("mysql2/promise");
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const cors = require("cors");
+const { PrismaClient } = require("@prisma/client");
 
 dotenv.config();
 
 const app = express();
-const router = express.Router();
-app.use("/api", router);
 
 const corsOptions = {
-  origin: "https://olgakruglik.github.io",
+  origin: ["https://olgakruglik.github.io", "http://localhost:3000"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
 
 app.use(cors(corsOptions));
-
-// 🔹 Middleware
 app.use(express.json());
 app.use(helmet({ contentSecurityPolicy: false }));
 
-// 🔹 Подключение к базе данных
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,
-  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : null,
-});
+const router = express.Router();
+app.use("/api", router);
+const prisma = new PrismaClient();
 
-// 🔹 Регистрация пользователя
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -44,43 +33,227 @@ router.post("/register", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const [
-      result,
-    ] = await db.execute(
-      `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`,
-      [username, email, hashedPassword]
-    );
+    const newUser = await prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+      },
+    });
 
-    res
-      .status(201)
-      .json({ message: "Пользователь создан!", userId: result.insertId });
+    res.status(201).json({ message: "Пользователь создан!", userId: newUser.id });
   } catch (error) {
     console.error("Ошибка регистрации:", error);
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-// 🔹 Получение списка пользователей
 router.get("/users", async (req, res) => {
-  const sql =
-    "SELECT id, username, email, created_at, is_locked, is_deleted FROM users";
   try {
-    const [results] = await db.query(sql);
-
-    res.json(results);
-  } catch (err) {
-    console.error("Ошибка при получении пользователей:", err);
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        email: true,
+      },
+    });
+    res.json(users);
+  } catch (error) {
+    console.error("Ошибка получения пользователей:", error);
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-// 🔹 Обработчик ошибок
+router.post("/check-user", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json("Email and password are required.");
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).json("User not found.");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json("Invalid email or password.");
+    }
+
+    res.status(200).json({
+      message: "User exists and password is valid.",
+      userId: user.id, 
+    });
+  } catch (error) {
+    console.error("Ошибка проверки пользователя:", error);
+    res.status(500).json("Ошибка сервера.");
+  }
+});
+
+router.delete("/delete-user/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const deletedUser = await prisma.user.delete({
+      where: { id: parseInt(id) },
+    });
+
+    res.status(200).json({ message: "Пользователь удален!", userId: deletedUser.id });
+  } catch (error) {
+    console.error("Ошибка удаления пользователя:", error);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+
+router.post("/forms", async (req, res) => {
+  const { title, description, questions, userId } = req.body;
+
+  if (!title || !description || !questions || !Array.isArray(questions) || !userId) {
+    return res.status(400).json({ error: "Все поля обязательны" });
+  }
+
+  try {
+    const newForm = await prisma.forms.create({
+      data: {
+        title,
+        descriptions: description,
+        user: { connect: { id: parseInt(userId, 10) } }, 
+        questions: {
+          create: questions.map((q) => ({
+            title: q.title,
+            type: q.type,
+            descriptions: q.description || "",
+            visible: 1,
+          })),
+        },
+      },
+    });
+
+    res.status(201).json({ message: "Форма успешно создана!" });
+  } catch (error) {
+    console.error("Ошибка создания формы:", error);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+router.get("/forms", async (req, res) => {
+  try {
+    const forms = await prisma.forms.findMany({
+      select: {
+        id: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        title: true,
+        descriptions: true,
+        questions: {
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            descriptions: true,
+            visible: true,
+          },
+        },
+      },
+    });
+    res.json(forms);
+  } catch (error) {
+    console.error("Ошибка получения форм:", error);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+router.post("/answers", async (req, res) => {
+  const { userId, formId, answers } = req.body;
+
+  if (!userId || !formId || !answers || !Array.isArray(answers)) {
+    return res.status(400).json({ error: "Все поля обязательны" });
+  }
+
+  try {
+    const createdAnswers = [];
+    for (const { questionId, answer } of answers) {
+      if (!questionId || answer === undefined) {
+        return res.status(400).json({ error: "Вопрос и ответ обязательны" });
+      }
+
+      const newAnswer = await prisma.answers.create({
+        data: {
+          user: { connect: { id: parseInt(userId, 10) } },
+          form: { connect: { id: parseInt(formId, 10) } },
+          question: { connect: { id: parseInt(questionId, 10) } },
+          answer,
+        },
+      });
+
+      createdAnswers.push(newAnswer);
+    }
+
+    res.status(201).json({ message: "Ответы успешно созданы!", answers: createdAnswers });
+  } catch (error) {
+    console.error("Ошибка создания ответа:", error);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+
+router.get("/answers", async (req, res) => {
+  const { formId } = req.query;
+
+  if (!formId) {
+    return res.status(400).json({ error: "formId обязателен" });
+  }
+
+  try {
+    const answers = await prisma.answers.findMany({
+      where: {
+        formId: parseInt(formId, 10),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+        question: {
+          select: {
+            id: true,
+            title: true,
+            descriptions: true,
+            type: true,
+          },
+        },
+      },
+    });
+
+    res.json(answers);
+  } catch (error) {
+    console.error("Ошибка получения ответов:", error);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+
+
 app.use((err, req, res, next) => {
   console.error("Ошибка:", err);
   res.status(500).json({ error: "Ошибка сервера", details: err.message });
 });
 
-// 🔹 Разрешение preflight-запросов (OPTIONS)
 app.options("*", cors(corsOptions));
 
 module.exports = app;
