@@ -12,7 +12,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
-    "mysql2": "^3.12.0"
+    "mysql2": "^3.12.0",
+    "xmlrpc": "^1.3.2"
   },
   "scripts": {
     "start": "node api/index.js",

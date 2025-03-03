@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,59 +8,67 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   username   String
-  email      String   @unique
+  email      String    @unique
   password   String
-  created_at DateTime @default(now())
-  is_locked  Boolean  @default(false)
-  is_deleted Boolean  @default(false)
-  posts      Post[]   // Связь с Post
-  forms      Forms[]  // Связь с Forms
-  answers    Answers[] // Связь с Answers
+  created_at DateTime  @default(now())
+  is_locked  Boolean   @default(false)
+  is_deleted Boolean   @default(false)
+  forms      Forms[]
+  posts      Post[]
+  answers    Answers[]
 
   @@map("users")
 }
 
 model Post {
-  id       Int      @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   title    String
   content  String
   authorId Int
-  author   User     @relation(fields: [authorId], references: [id])
+  author   User   @relation(fields: [authorId], references: [id])
+
+  @@index([authorId], map: "Post_authorId_fkey")
 }
 
 model Forms {
-  id           Int       @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   userId       Int
-  user         User      @relation(fields: [userId], references: [id])
   title        String
   descriptions String
-  questions    Questions[] // Связь с Questions
-  answers      Answers[]   // Связь с Answers
+  user         User        @relation(fields: [userId], references: [id])
+  questions    Questions[]
+  answers      Answers[]
+
+  @@index([userId], map: "Forms_userId_fkey")
 }
 
 model Questions {
-  id            Int      @id @default(autoincrement())
-  formsId       Int
-  form          Forms    @relation(fields: [formsId], references: [id])
-  title         String
-  descriptions  String
-  visible       Int
-  type          String
-  answers       Answers[] // Связь с Answers
+  id           Int       @id @default(autoincrement())
+  formsId      Int
+  title        String
+  descriptions String
+  visible      Int
+  type         String
+  form         Forms     @relation(fields: [formsId], references: [id])
+  answers      Answers[]
+
+  @@index([formsId], map: "Questions_formsId_fkey")
 }
 
 model Answers {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  formId      Int
-  questionId  Int
-  answer      String
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  formId     Int
+  questionId Int
+  answer     String
+  form       Forms     @relation(fields: [formId], references: [id])
+  question   Questions @relation(fields: [questionId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
 
-  user        User     @relation(fields: [userId], references: [id])
-  form        Forms    @relation(fields: [formId], references: [id])
-  question    Questions @relation(fields: [questionId], references: [id])
-
+  @@index([formId], map: "answers_formId_fkey")
+  @@index([questionId], map: "answers_questionId_fkey")
+  @@index([userId], map: "answers_userId_fkey")
   @@map("answers")
 }

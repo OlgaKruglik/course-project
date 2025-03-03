@@ -3,9 +3,14 @@ const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const cors = require("cors");
+const xmlrpc = require("xmlrpc");
 const { PrismaClient } = require("@prisma/client");
 
 dotenv.config();
+const odooUrl = "https://course-project.odoo.com";
+const db = "course-project";
+const username = "your_user@example.com";
+const password = "your_password";
 
 const app = express();
 
@@ -23,6 +28,8 @@ app.use(helmet({ contentSecurityPolicy: false }));
 const router = express.Router();
 app.use("/api", router);
 const prisma = new PrismaClient();
+
+
 
 router.post("/register", async (req, res) => {
   try {
@@ -246,6 +253,49 @@ router.get("/answers", async (req, res) => {
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
+
+router.get("/odoo/forms", async (req, res) => {
+  const common = xmlrpc.createClient({ url: `${odooUrl}/xmlrpc/2/common` });
+  const object = xmlrpc.createClient({ url: `${odooUrl}/xmlrpc/2/object` });
+
+  try {
+    // Аутентификация
+    common.methodCall("authenticate", [db, username, password, {}], (err, uid) => {
+      if (err || !uid) {
+        console.error("Ошибка аутентификации:", err);
+        return res.status(500).json({ error: "Ошибка аутентификации Odoo" });
+      }
+
+      console.log("User ID:", uid);
+
+      // Получение данных форм (survey.survey)
+      object.methodCall(
+        "execute_kw",
+        [
+          db,
+          uid,
+          password,
+          "survey.survey",
+          "search_read",
+          [[["user_id", "=", uid]]], // Фильтр: только формы пользователя
+          { fields: ["id", "title"] },
+        ],
+        (err, surveys) => {
+          if (err) {
+            console.error("Ошибка получения форм:", err);
+            return res.status(500).json({ error: "Ошибка получения данных из Odoo" });
+          }
+
+          res.json({ forms: surveys });
+        }
+      );
+    });
+  } catch (error) {
+    console.error("Ошибка Odoo API:", error);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
 
 
 
