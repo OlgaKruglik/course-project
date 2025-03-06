@@ -12,6 +12,7 @@ model User {
   username   String
   email      String    @unique
   password   String
+  apiToken   String?   @unique
   created_at DateTime  @default(now())
   is_locked  Boolean   @default(false)
   is_deleted Boolean   @default(false)
