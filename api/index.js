@@ -233,7 +233,7 @@ router.delete("/delete-user/:id", async (req, res) => {
 
 const axios = require("axios");
 
-router.post("/forms", async (req, res) => {
+router.post("/forms", authenticate, async (req, res) => {
   const { title, description, questions } = req.body;
 
   if (!title || !description || !questions || !Array.isArray(questions)) {
@@ -311,7 +311,7 @@ router.get("/profile/token", authenticate, async (req, res) => {
 
 
 
-router.get("/forms", authenticate, async (req, res) => {
+router.get("/forms", async (req, res) => {
   try {
     const forms = await prisma.forms.findMany({
       select: {
