@@ -18,13 +18,18 @@ dotenv.config();
 const app = express();
 
 const corsOptions = {
-  origin: ["https://olgakruglik.github.io", "http://localhost:3000", " https://form6.odoo.com/web/dataset/call_kw", "https://olgakruglik.github.io/react-course-project/"],
+  origin: [
+    "https://olgakruglik.github.io",
+    "http://localhost:3000",
+    "https://form6.odoo.com/web/dataset/call_kw",
+    "https://olgakruglik.github.io/react-course-project/"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
 
-app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 // app.use(helmet({ contentSecurityPolicy: false }));
 
@@ -34,6 +39,17 @@ app.use("/api", router);
 app.use("/api/jira", jiraRoutes);
 const prisma = new PrismaClient();
 
+async function test() {
+  try {
+    const users = await prisma.user.findMany();
+    console.log(users);
+    await prisma.$disconnect();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+test();
 
 const common = xmlrpc.createClient({ url: `${config.odoo.url}/xmlrpc/2/common` });
 const object = xmlrpc.createClient({ url: `${config.odoo.url}/xmlrpc/2/object` });
