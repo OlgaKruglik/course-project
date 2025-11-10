@@ -311,7 +311,7 @@ router.get("/profile/token", authenticate, async (req, res) => {
 
 
 
-router.get("/forms", async (req, res) => {
+router.get("/forms", authenticate, async (req, res) => {
   try {
     const forms = await prisma.forms.findMany({
       select: {
