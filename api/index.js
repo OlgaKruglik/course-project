@@ -127,7 +127,7 @@ const authenticate = async (req, res, next) => {
 };
 
 
-router.post("/register", authenticate, async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
