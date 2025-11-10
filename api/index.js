@@ -29,7 +29,8 @@ const corsOptions = {
   credentials: true,
 };
 
-app.options("*", cors(corsOptions));
+app.use(cors(corsOptions));
+app.options("*", cors());
 app.use(express.json());
 // app.use(helmet({ contentSecurityPolicy: false }));
 
