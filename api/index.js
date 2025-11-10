@@ -5,7 +5,7 @@ const helmet = require("helmet");
 const cors = require("cors");
 const xmlrpc = require("xmlrpc");
 const jwt = require("jsonwebtoken");
-import prisma from './prismaClient.js';
+const { PrismaClient } = require("@prisma/client");
 const { randomBytes } = require("crypto");
 const config = require("../config");
 const jiraRoutes = require("./jiraRoutes.js");
@@ -32,7 +32,7 @@ app.use(express.json());
 const router = express.Router();
 app.use("/api", router);
 app.use("/api/jira", jiraRoutes);
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
 
 const common = xmlrpc.createClient({ url: `${config.odoo.url}/xmlrpc/2/common` });
