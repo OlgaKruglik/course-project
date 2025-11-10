@@ -18,7 +18,7 @@ dotenv.config();
 const app = express();
 
 const corsOptions = {
-  origin: ["https://olgakruglik.github.io", "http://localhost:3000", " https://form6.odoo.com/web/dataset/call_kw"],
+  origin: ["https://olgakruglik.github.io", "http://localhost:3000", " https://form6.odoo.com/web/dataset/call_kw", "https://olgakruglik.github.io/react-course-project/"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
